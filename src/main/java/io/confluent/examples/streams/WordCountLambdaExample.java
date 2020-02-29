@@ -118,10 +118,11 @@ public class WordCountLambdaExample {
    * The Streams application as a whole can be launched like any normal Java application that has a `main()` method.
    */
   public static void main(final String[] args) {
-    final String bootstrapServers = args.length > 0 ? args[0] : "localhost:9092";
+    final String clientId = args.length > 0 ? args[0] : "wordcount-lambda-example-client";
+    final String bootstrapServers = args.length > 1 ? args[1] : "localhost:9092";
 
     // Configure the Streams application.
-    final Properties streamsConfiguration = getStreamsConfiguration(bootstrapServers);
+    final Properties streamsConfiguration = getStreamsConfiguration(bootstrapServers, clientId);
 
     // Define the processing topology of the Streams application.
     final StreamsBuilder builder = new StreamsBuilder();
@@ -138,7 +139,7 @@ public class WordCountLambdaExample {
     // Thus in a production scenario you typically do not want to clean up always as we do here but rather only when it
     // is truly needed, i.e., only under certain conditions (e.g., the presence of a command line flag for your app).
     // See `ApplicationResetExample.java` for a production-like example.
-    streams.cleanUp();
+    //streams.cleanUp();
 
     // Now run the processing topology via `start()` to begin processing its input data.
     streams.start();
@@ -154,14 +155,15 @@ public class WordCountLambdaExample {
    * Additionally, you could also define Kafka Producer and Kafka Consumer settings when needed.
    *
    * @param bootstrapServers Kafka cluster address
+   * @param clientId clientID for the Kafka stream consumer
    * @return Properties getStreamsConfiguration
    */
-  static Properties getStreamsConfiguration(final String bootstrapServers) {
+  static Properties getStreamsConfiguration(final String bootstrapServers, final String clientId) {
     final Properties streamsConfiguration = new Properties();
     // Give the Streams application a unique name.  The name must be unique in the Kafka cluster
     // against which the application is run.
     streamsConfiguration.put(StreamsConfig.APPLICATION_ID_CONFIG, "wordcount-lambda-example");
-    streamsConfiguration.put(StreamsConfig.CLIENT_ID_CONFIG, "wordcount-lambda-example-client");
+    streamsConfiguration.put(StreamsConfig.CLIENT_ID_CONFIG, clientId);
     // Where to find Kafka broker(s).
     streamsConfiguration.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
     // Specify default (de)serializers for record keys and for record values.
@@ -173,7 +175,7 @@ public class WordCountLambdaExample {
     // For illustrative purposes we disable record caches.
     streamsConfiguration.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, 0);
     // Use a temporary directory for storing state, which will be automatically removed after the test.
-    streamsConfiguration.put(StreamsConfig.STATE_DIR_CONFIG, TestUtils.tempDirectory().getAbsolutePath());
+    streamsConfiguration.put(StreamsConfig.STATE_DIR_CONFIG, "/data");
     return streamsConfiguration;
   }
 

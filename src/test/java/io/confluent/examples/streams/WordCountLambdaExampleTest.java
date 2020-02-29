@@ -57,7 +57,7 @@ public class WordCountLambdaExampleTest {
     final StreamsBuilder builder = new StreamsBuilder();
     //Create Actual Stream Processing pipeline
     WordCountLambdaExample.createWordCountStream(builder);
-    testDriver = new TopologyTestDriver(builder.build(), WordCountLambdaExample.getStreamsConfiguration("localhost:9092"));
+    testDriver = new TopologyTestDriver(builder.build(), WordCountLambdaExample.getStreamsConfiguration("localhost:9092", "test-client"));
     inputTopic = testDriver.createInputTopic(WordCountLambdaExample.inputTopic,
                                              stringSerializer,
                                              stringSerializer);
