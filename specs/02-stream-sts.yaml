@@ -1,0 +1,61 @@
+apiVersion: "apps/v1"
+kind: StatefulSet
+metadata:
+  name: stream
+  namespace: kafka
+spec:
+  serviceName: stream
+  replicas: 3
+  selector:
+    matchLabels:
+      app: stream
+  template:
+    metadata:
+      labels:
+        app: stream
+    spec:
+      schedulerName: stork
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - stream
+            topologyKey: kubernetes.io/hostname
+      containers:
+      - name: stream
+        image: disrani/streams:latest
+        #command: ["java"]
+        command:
+        - java
+        - -cp
+        - /usr/share/java/kafka-streams-examples/kafka-streams-examples-5.4.0-standalone.jar
+        - io.confluent.examples.streams.WordCountLambdaExample
+        - $(POD_NAME)
+        - kafka-0.kafka-headless.kafka.svc.cluster.local:9092
+        - kafka-1.kafka-headless.kafka.svc.cluster.local:9092
+        - kafka-2.kafka-headless.kafka.svc.cluster.local:9092
+        imagePullPolicy: Always
+        ports:
+        env:
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+        volumeMounts:
+        - name: stream-data
+          mountPath: /data
+  volumeClaimTemplates:
+  - metadata:
+      name: stream-data
+      annotations:
+        volume.beta.kubernetes.io/storage-class: px-repl3
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 8Gi
+
