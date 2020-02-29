@@ -19,8 +19,8 @@ ARG DOCKER_UPSTREAM_TAG=latest
 
 FROM ${DOCKER_UPSTREAM_REGISTRY}confluentinc/cp-base-new:${DOCKER_UPSTREAM_TAG}
 
-ARG STREAMS_VERSION
-ARG ARTIFACT_ID
+ARG STREAMS_VERSION=5.4.0
+ARG ARTIFACT_ID=kafka-streams-examples
 
 LABEL MAINTAINER partner-support@confluent.io
 LABEL io.confluent.docker=true
@@ -33,7 +33,7 @@ WORKDIR /build
 ENV COMPONENT="${ARTIFACT_ID}"
 
 # We run the Kafka Streams demo application as a non-priviledged user.
-ENV STREAMS_USER="streams"
+ENV STREAMS_USER="root"
 ENV STREAMS_GROUP=$STREAMS_USER
 
 ENV STREAMS_EXAMPLES_BRANCH="${CONFLUENT_MAJOR_VERSION}.${CONFLUENT_MINOR_VERSION}.x"
@@ -50,18 +50,13 @@ EXPOSE $KAFKA_MUSIC_APP_REST_PORT
 # base image that supports it
 ENV LANG="C.UTF-8"
 
-ADD --chown=appuser:appuser target/${ARTIFACT_ID}-${STREAMS_VERSION}-standalone.jar /usr/share/java/${ARTIFACT_ID}/${ARTIFACT_ID}-${STREAMS_VERSION}-standalone.jar
-ADD --chown=appuser:appuser target/${ARTIFACT_ID}-${STREAMS_VERSION}-package/share/doc/* /usr/share/doc/${ARTIFACT_ID}/
+ADD target/${ARTIFACT_ID}-${STREAMS_VERSION}-standalone.jar /usr/share/java/${ARTIFACT_ID}/${ARTIFACT_ID}-${STREAMS_VERSION}-standalone.jar
 
-COPY --chown=appuser:appuser include/etc/confluent/docker /etc/confluent/docker
+COPY include/etc/confluent/docker /etc/confluent/docker
 
 USER root
 
-RUN groupadd $STREAMS_GROUP && useradd -r -g $STREAMS_GROUP $STREAMS_USER
-
 RUN mkdir /etc/$COMPONENT \
   && chown $STREAMS_USER:$STREAMS_GROUP /etc/$COMPONENT
-
-USER $STREAMS_USER
 
 CMD ["/etc/confluent/docker/run"]
